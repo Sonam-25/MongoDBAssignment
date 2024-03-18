@@ -1,3 +1,7 @@
+'''
+task 3 : Create Python methods and MongoDB queries to insert new comments, movies, theatres,
+and users into respective MongoDB collections.
+'''
 from pymongo import MongoClient
 
 # Establish a connection to MongoDB.
@@ -62,3 +66,5 @@ insert_comment(comment_comments)
 insert_movie(comment_movies)
 insert_theater(comment_theaters)
 insert_user(comment_users)
+
+print("\nData Inserted Successfully!")
