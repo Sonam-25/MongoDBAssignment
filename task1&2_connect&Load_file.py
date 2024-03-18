@@ -1,5 +1,6 @@
 from pymongo import MongoClient
-import json
+from bson import json_util
+import os
 
 # Establish a connection to the MongoDB database.
 mongodb_host = 'localhost'
@@ -7,23 +8,29 @@ mongodb_port = 27017
 client = MongoClient(mongodb_host, mongodb_port)
 db = client['MongoDbAssignment']  # Access the specified database.
 
-# Function to load JSON data from a file into a specified MongoDB collection.
-def bulk_load_json_file(collection_name, json_file_path):
-    collection = db[collection_name]  # Access the collection within the database.
-    with open(json_file_path, 'r') as file:  # Open the JSON file for reading.
-        data = json.load(file)  # Load the JSON data from the file.
-        for x in data:  # Iterate over the items in the JSON data.
-            collection.insert_one(x)  # Insert each item into the collection.
+def bulk_load_data(db, directory):
+    for file_name in os.listdir(directory):
+        if file_name.endswith('.json'):
+            collection_name = os.path.splitext(file_name)[0]  # Extract collection name from file name
+            
+            # Create collection if it doesn't exist
+            if collection_name not in db.list_collection_names():
+                db.create_collection(collection_name)
+                print(f"Collection '{collection_name}' created.")
 
-# List of collection names to be populated with data.
-collection_list = ['comments', 'movies', 'theaters', 'users']
-path_name = '/Users/sonamkumari/Desktop/helloWorld/MongoDB/sample_mflix'  # Base path where the JSON files are located.
-extension = '.json'  # File extension for the JSON files.
+            # Read JSON file line by line and insert each line into collection
+            with open(os.path.join(directory, file_name), 'r') as f:
+                for line in f:
+                    # Convert JSON data to BSON
+                    data = json_util.loads(line)
+                    # Insert data into collection
+                    db[collection_name].insert_one(data)
+                print(f"Data inserted into '{collection_name}' collection.")
 
-# Iterate over each collection name and load the corresponding JSON file.
-for each_file in collection_list:
-    full_path = path_name + "/" + each_file + extension  # Construct the full file path.
-    bulk_load_json_file(each_file, full_path)  # Load the JSON file into the collection.
+
+
+# Call the function to load data into collections
+bulk_load_data(db, '/Users/sonamkumari/Desktop/helloWorld/MongoDB/sample_mflix')
 
 print("Successfully Loaded in Collections!")  # Print a confirmation message.
 
